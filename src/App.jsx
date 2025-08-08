@@ -24,6 +24,8 @@ function CameraController({ mode, focus, controlsRef, onInArrive, outDistance = 
   const fromPos = useRef(new THREE.Vector3());
   const toPos = useRef(new THREE.Vector3());
   const lookAtVec = useRef(new THREE.Vector3());
+
+
   const initialized = useRef(false);
 
   // initialize when mode changes
@@ -46,14 +48,16 @@ function CameraController({ mode, focus, controlsRef, onInArrive, outDistance = 
         fromPos.current.copy(camera.position);
         toPos.current.set(...focus.cameraPos);
         lookAtVec.current.set(...focus.lookAt);
+        
         t.current = 0;
         initialized.current = true;
       }
 
       // lerp t (speed tuned here)
       t.current = Math.min(1, t.current + delta * 2.0); // 0 -> 1 in ~0.5s (adjust multiplier)
-      camera.position.lerpVectors(fromPos.current, toPos.current, t.current);
+      camera.position.lerpVectors(fromPos.current, toPos.current, t.current);      
       camera.lookAt(lookAtVec.current);
+
 
       // also keep controls target locked (prevents future snap)
       if (controlsRef?.current) controlsRef.current.target.copy(lookAtVec.current);

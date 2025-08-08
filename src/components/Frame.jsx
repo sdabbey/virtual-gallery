@@ -1,7 +1,7 @@
 import { useLoader } from "@react-three/fiber";
 import * as THREE from "three";
 
-export default function Frame({ position, imageUrl, title, artist, description, onClick }) {
+export default function Frame({ position, rotation, imageUrl, title, artist, description, onClick }) {
   const texture = useLoader(THREE.TextureLoader, imageUrl);
 
   const artWidth = 6;
@@ -11,12 +11,14 @@ export default function Frame({ position, imageUrl, title, artist, description, 
   return (
     <group
       position={position}
+      rotation={rotation}
       onClick={(e) => {
         e.stopPropagation(); // prevent background clicks
         onClick?.({
           cameraPos: [position[0], position[1], position[2] + 8], // zoom-in position
           lookAt: position, // focus on the artwork
           title,
+          
           artist,
           description
         });

@@ -49,14 +49,16 @@ export default function GalleryRoom({ onFrameClick}) {
       {/* Ceiling */}
       <mesh position={[0, 10, 0]} rotation={[Math.PI / 2, 0, 0]}>
         <planeGeometry args={[40, 40]} />
-        <meshStandardMaterial color="#eeeeee" />
+        <meshStandardMaterial color="#000" />
       </mesh>
 
 
       {/* Art Frames */}
+        {/* Front Wall */}
       <Frame
-        position={[-9, 4.5, -19.9]}
-        imageUrl="/artworks/art1.jpg"
+        position={[-15, 4.5, -19.9]}
+        rotation={[0, 0, 0]}
+        imageUrl="/artworks/devils-tarot.png"
         title="Starry Night"
         artist="Vincent van Gogh"
         description="A depiction of the night sky from the asylum in Saint-Rémy."
@@ -64,8 +66,9 @@ export default function GalleryRoom({ onFrameClick}) {
       />
 
       <Frame
-        position={[0, 4.5, -19.9]}
-        imageUrl="/artworks/art2.jpg"
+        position={[-5, 4.5, -19.9]}
+        rotation={[0, 0, 0]}
+        imageUrl="/artworks/diamond-in-the-rough.jpg"
         title="The Persistence of Memory"
         artist="Salvador Dalí"
         description="The famous melting clocks surreal landscape."
@@ -73,14 +76,66 @@ export default function GalleryRoom({ onFrameClick}) {
       />
 
       <Frame
-        position={[9, 4.5, -19.9]}
-        imageUrl="/artworks/art3.jpg"
+        position={[5, 4.5, -19.9]}
+        rotation={[0, 0, 0]}
+        imageUrl="/artworks/maniacal-nightmares.jpg"
         title="Mona Lisa"
         artist="Leonardo da Vinci"
         description="One of the most famous portraits in art history."
         onClick={onFrameClick}
       />
 
+      <Frame
+        position={[15, 4.5, -19.9]}
+        rotation={[0, 0, 0]}
+        imageUrl="/artworks/its-always-sunny.png"
+        title="Mona Lisa"
+        artist="Leonardo da Vinci"
+        description="One of the most famous portraits in art history."
+        onClick={onFrameClick}
+      />
+
+      {/* Right Wall */}
+      <Frame
+        position={[20, 4.5, -15]}
+        rotation={[0, -Math.PI / 2, 0]}
+        imageUrl="/artworks/lady-in-the-rain.png"
+        title="Mona Lisa"
+        artist="Leonardo da Vinci"
+        description="One of the most famous portraits in art history."
+        onClick={onFrameClick}
+      />
+
+      <Frame
+        position={[20, 4.5, -5]}
+        rotation={[0, -Math.PI / 2, 0]}
+        imageUrl="/artworks/eden.png"
+        title="Mona Lisa"
+        artist="Leonardo da Vinci"
+        description="One of the most famous portraits in art history."
+        onClick={onFrameClick}
+      />
+
+      {/* Left Wall */}
+      <Frame
+        position={[-20, 4.5, -15]}
+        rotation={[0, Math.PI / 2, 0]}
+        imageUrl="/artworks/stan.png"
+        title="Mona Lisa"
+        artist="Leonardo da Vinci"
+        description="One of the most famous portraits in art history."
+        onClick={onFrameClick}
+      />
+
+       <Frame
+        position={[-20, 4.5, -5]}
+        rotation={[0, Math.PI / 2, 0]}
+        imageUrl="/artworks/tapestry-of-dreams.png"
+        title="Mona Lisa"
+        artist="Leonardo da Vinci"
+        description="One of the most famous portraits in art history."
+        onClick={onFrameClick}
+      />
     </group>
   );
 }
