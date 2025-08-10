@@ -1,27 +1,45 @@
 import { useLoader } from "@react-three/fiber";
 import * as THREE from "three";
-
+import { useState } from "react";
 export default function Frame({ position, rotation, imageUrl, title, artist, description, onClick }) {
+  
+
   const texture = useLoader(THREE.TextureLoader, imageUrl);
 
-  const artWidth = 6;
-  const artHeight = 5;
-  const frameDepth = 0.1;
+  const artWidth = 5.5;
+  const artHeight = 6;
+  const frameDepth = 0.2;
 
   return (
     <group
       position={position}
       rotation={rotation}
       onClick={(e) => {
-        e.stopPropagation(); // prevent background clicks
+        e.stopPropagation();
+
+        // Step 1: make a forward vector
+        const forward = new THREE.Vector3(0, 0, 1);
+
+        // Step 2: apply the artwork's Y-rotation
+        const q = new THREE.Quaternion().setFromEuler(
+          new THREE.Euler(rotation[0], rotation[1], rotation[2])
+        );
+        forward.applyQuaternion(q);
+
+        // Step 3: decide how far in front of the artwork you want the camera
+        const distance = 8;
+        const camPos = new THREE.Vector3(...position).add(forward.multiplyScalar(distance));
+
+        // Step 4: pass correct values to CameraController
         onClick?.({
-          cameraPos: [position[0], position[1], position[2] + 8], // zoom-in position
-          lookAt: position, // focus on the artwork
+          cameraPos: [camPos.x, camPos.y, camPos.z],
+          lookAt: position,
           title,
-          
           artist,
-          description
+          description,
+          artPos: position
         });
+        
       }}
     >
       {/* Frame border */}

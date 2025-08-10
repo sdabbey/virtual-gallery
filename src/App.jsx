@@ -8,7 +8,9 @@ import * as THREE from "three";
 import "./App.css";
 import ControlsLimiter from "./components/ControlsLimiter";
 import MovementControl from "./components/MovementControl";
-
+import MovementHint from "./components/MovementHint";
+import OnScreenControls from "./components/OnScreenControls";
+import ArtDetailsUI from "./components/ArtDetailsUI";
 /**
  * CameraController
  * - mode: "idle" | "in" | "out"
@@ -16,102 +18,12 @@ import MovementControl from "./components/MovementControl";
  * - out: lerp from current camera pos -> backPos (computed from camPos + dirAway*distance)
  *   while KEEPING lookAt locked at the artwork position (so no spin)
  */
-function CameraController({ mode, focus, controlsRef, onInArrive, outDistance = 15 }) {
-  const { camera } = useThree();
-
-  // anim values
-  const t = useRef(0);
-  const fromPos = useRef(new THREE.Vector3());
-  const toPos = useRef(new THREE.Vector3());
-  const lookAtVec = useRef(new THREE.Vector3());
 
 
-  const initialized = useRef(false);
 
-  // initialize when mode changes
-  useEffect(() => {
-    t.current = 0;
-    initialized.current = false;
-  }, [mode, focus]);
-
-  useFrame((_, delta) => {
-    // If idle do nothing
-    if (mode === "idle") return;
-
-    // Ensure controlsRef exists
-    if (controlsRef?.current) controlsRef.current.enabled = false;
-
-    // ZOOM IN behavior
-    if (mode === "in" && focus) {
-      // init once
-      if (!initialized.current) {
-        fromPos.current.copy(camera.position);
-        toPos.current.set(...focus.cameraPos);
-        lookAtVec.current.set(...focus.lookAt);
-        
-        t.current = 0;
-        initialized.current = true;
-      }
-
-      // lerp t (speed tuned here)
-      t.current = Math.min(1, t.current + delta * 2.0); // 0 -> 1 in ~0.5s (adjust multiplier)
-      camera.position.lerpVectors(fromPos.current, toPos.current, t.current);      
-      camera.lookAt(lookAtVec.current);
+import CameraController from "./components/CameraController";
 
 
-      // also keep controls target locked (prevents future snap)
-      if (controlsRef?.current) controlsRef.current.target.copy(lookAtVec.current);
-
-      if (t.current >= 1) {
-        onInArrive?.();
-      }
-
-      return;
-    }
-
-    // ZOOM OUT behavior (simple back-up, no extra rotate)
-    if (mode === "out" && focus) {
-      // init once
-      if (!initialized.current) {
-        fromPos.current.copy(camera.position); // start where camera currently is
-        // direction from artwork to camera
-        const artPos = new THREE.Vector3(...focus.lookAt);
-        const camPos = new THREE.Vector3(...focus.cameraPos);
-        const dir = camPos.clone().sub(artPos).normalize(); // art -> camera
-        // compute end position: move further along same ray (backwards from artwork)
-        const backPos = camPos.clone().add(dir.multiplyScalar(outDistance));
-        toPos.current.copy(backPos);
-        // Keep looking at the artwork the whole time
-        lookAtVec.current.copy(artPos);
-        t.current = 0;
-        initialized.current = true;
-      }
-
-      t.current = Math.min(1, t.current + delta * 2.0);
-      camera.position.lerpVectors(fromPos.current, toPos.current, t.current);
-
-      // Crucial: KEEP facing artwork the whole way — no sudden rotation
-      camera.lookAt(lookAtVec.current);
-
-      // Keep OrbitControls.target aligned to avoid snapping when re-enabled
-      if (controlsRef?.current) {
-        controlsRef.current.target.copy(lookAtVec.current);
-      }
-
-      if (t.current >= 1) {
-        // animation finished: re-enable controls and leave view in this backed-up position
-        if (controlsRef?.current) {
-          controlsRef.current.enabled = true;
-          controlsRef.current.update();
-        }
-      }
-
-      return;
-    }
-  });
-
-  return null;
-}
 
 export default function App() {
   const [focus, setFocus] = useState(null); // { cameraPos, lookAt, title,... } while zoomed in
@@ -119,15 +31,16 @@ export default function App() {
   const [showDetailsBtn, setShowDetailsBtn] = useState(false);
   const [showOverlay, setShowOverlay] = useState(false);
   const controlsRef = useRef();
+  const [zoomedArtPos, setZoomedArtPos] = useState(null);
 
-  // Called when user clicks a frame (from GalleryRoom)
   const onFrameClick = (data) => {
-    // ensure controlsRef is available; if not, still proceed
-    // data must include cameraPos and lookAt (as set by your Frame component)
+     // store clicked art's position
     setFocus(data);
+    setZoomedArtPos(data.artPos);
     setMode("in");
     setShowDetailsBtn(false);
     setShowOverlay(false);
+    setZoomedArtPos(data.artPos);
   };
 
   // When camera finishes zooming in
@@ -178,7 +91,7 @@ export default function App() {
             focus={focus}
             controlsRef={controlsRef}
             onInArrive={handleInArrive}
-            outDistance={15}
+            outDistance={17}
           />
 
           <ambientLight intensity={0.4} />
@@ -212,17 +125,37 @@ export default function App() {
               minZ: -18, maxZ: 18      // keep camera/target inside walls (front/back)
             }}
           />
+
+           
+        
+
         </Suspense>
       </Canvas>
+      {/* Movement hint */}
+      {/* <MovementHint/> */}
+      {/* <div className="art-help">
+        <svg fill="#ffffff" height="200px" width="200px" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 52 52" xml:space="preserve" stroke="#ffffff"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <path d="M26,0C11.663,0,0,11.663,0,26s11.663,26,26,26s26-11.663,26-26S40.337,0,26,0z M26,50C12.767,50,2,39.233,2,26 S12.767,2,26,2s24,10.767,24,24S39.233,50,26,50z"></path> <path d="M26,37c-0.553,0-1,0.447-1,1v2c0,0.553,0.447,1,1,1s1-0.447,1-1v-2C27,37.447,26.553,37,26,37z"></path> <path d="M26.113,9.001C26.075,9.001,26.037,9,25.998,9c-2.116,0-4.106,0.815-5.615,2.304C18.847,12.819,18,14.842,18,17 c0,0.553,0.447,1,1,1s1-0.447,1-1c0-1.618,0.635-3.136,1.787-4.272c1.153-1.137,2.688-1.765,4.299-1.727 c3.161,0.044,5.869,2.752,5.913,5.913c0.029,2.084-0.999,4.002-2.751,5.132C26.588,23.762,25,26.794,25,30.158V33 c0,0.553,0.447,1,1,1s1-0.447,1-1v-2.842c0-2.642,1.276-5.105,3.332-6.432c2.335-1.506,3.706-4.063,3.667-6.84 C33.939,12.599,30.401,9.061,26.113,9.001z"></path> </g> </g></svg>
+      </div> */}
 
-      {/* More details button (shows after arrival) */}
-      {mode === "in" && !showOverlay && showDetailsBtn && (
-        <button
-          onClick={() => setShowOverlay(true)}
-          className="absolute bottom-8 right-8 bg-white text-black px-4 py-2 rounded shadow-lg transition-opacity duration-300"
-        >
-          More details
-        </button>
+      {mode !== "in" && <OnScreenControls />}
+
+     
+      {/* Show details button */}
+      {mode === "in" && !showOverlay && showDetailsBtn && zoomedArtPos && (
+        <ArtDetailsUI >
+          <button className="close-btn" onClick={() => handleExitRequest()}>
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="#ffffff"><g id="SVGRepo_bgCarrier" strokeWidth="0"></g><g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round"></g><g id="SVGRepo_iconCarrier"> <g id="Menu / Close_LG"> <path id="Vector" d="M21 21L12 12M12 12L3 3M12 12L21.0001 3M12 12L3 21.0001" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"></path> </g> </g></svg>
+          </button>
+          <button className="more-info" onClick={() => setShowOverlay(true)}>
+            <svg fill="#ffffff" viewBox="0 0 56 56" xmlns="http://www.w3.org/2000/svg" stroke="#ffffff"><g id="SVGRepo_bgCarrier" strokeWidth="0"></g><g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round"></g><g id="SVGRepo_iconCarrier"><path d="M 24.3320 13.2461 C 24.3320 15.1211 25.8320 16.6211 27.7070 16.6211 C 29.6055 16.6211 31.0820 15.1211 31.0586 13.2461 C 31.0586 11.3477 29.6055 9.8477 27.7070 9.8477 C 25.8320 9.8477 24.3320 11.3477 24.3320 13.2461 Z M 18.5195 44.2305 C 18.5195 45.3789 19.3399 46.1523 20.5820 46.1523 L 35.4179 46.1523 C 36.6601 46.1523 37.4805 45.3789 37.4805 44.2305 C 37.4805 43.1055 36.6601 42.3320 35.4179 42.3320 L 30.7070 42.3320 L 30.7070 24.4492 C 30.7070 23.1836 29.8867 22.3399 28.6680 22.3399 L 21.2383 22.3399 C 20.0195 22.3399 19.1992 23.0899 19.1992 24.2148 C 19.1992 25.3867 20.0195 26.1602 21.2383 26.1602 L 26.3711 26.1602 L 26.3711 42.3320 L 20.5820 42.3320 C 19.3399 42.3320 18.5195 43.1055 18.5195 44.2305 Z"></path></g></svg>
+          </button>
+
+          <button className="link-btn">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="#ffffff"><g id="SVGRepo_bgCarrier" strokeWidth="0"></g><g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M15.197 3.35462C16.8703 1.67483 19.4476 1.53865 20.9536 3.05046C22.4596 4.56228 22.3239 7.14956 20.6506 8.82935L18.2268 11.2626M10.0464 14C8.54044 12.4882 8.67609 9.90087 10.3494 8.22108L12.5 6.06212" stroke="#ffffff" strokeWidth="2" strokeLinecap="round"></path> <path d="M13.9536 10C15.4596 11.5118 15.3239 14.0991 13.6506 15.7789L11.2268 18.2121L8.80299 20.6454C7.12969 22.3252 4.55237 22.4613 3.0464 20.9495C1.54043 19.4377 1.67609 16.8504 3.34939 15.1706L5.77323 12.7373" stroke="#ffffff" strokeWidth="2" strokeLinecap="round"></path> </g></svg>
+          </button>
+
+        </ArtDetailsUI>
+        
       )}
 
       {/* Overlay modal — clicking outside triggers handleExitRequest */}
