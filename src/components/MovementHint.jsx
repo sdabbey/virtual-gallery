@@ -2,8 +2,9 @@
 export default function MovementHint() {
   return (
     <div
+      className="lg:fixed hide-mobile"
       style={{
-        position: "fixed",
+        
         bottom: "20px",
         left: "50%",
         transform: "translateX(-50%)",

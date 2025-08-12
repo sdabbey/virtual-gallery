@@ -1,13 +1,29 @@
 import { useLoader } from "@react-three/fiber";
 import * as THREE from "three";
-import { useState } from "react";
-export default function Frame({ position, rotation, imageUrl, title, artist, description, onClick }) {
-  
+import { useState, useEffect } from "react";
 
+export default function Frame({
+  position,
+  rotation,
+  imageUrl,
+  title,
+  artist,
+  description,
+  onClick
+}) {
   const texture = useLoader(THREE.TextureLoader, imageUrl);
 
-  const artWidth = 5.5;
-  const artHeight = 6;
+  // Responsive sizing
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+
+  const artWidth = isMobile ? 3.5 : 5.5;
+  const artHeight = isMobile ? 4 : 6;
   const frameDepth = 0.2;
 
   return (
@@ -16,21 +32,15 @@ export default function Frame({ position, rotation, imageUrl, title, artist, des
       rotation={rotation}
       onClick={(e) => {
         e.stopPropagation();
-
-        // Step 1: make a forward vector
         const forward = new THREE.Vector3(0, 0, 1);
-
-        // Step 2: apply the artwork's Y-rotation
         const q = new THREE.Quaternion().setFromEuler(
           new THREE.Euler(rotation[0], rotation[1], rotation[2])
         );
         forward.applyQuaternion(q);
-
-        // Step 3: decide how far in front of the artwork you want the camera
         const distance = 8;
-        const camPos = new THREE.Vector3(...position).add(forward.multiplyScalar(distance));
-
-        // Step 4: pass correct values to CameraController
+        const camPos = new THREE.Vector3(...position).add(
+          forward.multiplyScalar(distance)
+        );
         onClick?.({
           cameraPos: [camPos.x, camPos.y, camPos.z],
           lookAt: position,
@@ -39,7 +49,6 @@ export default function Frame({ position, rotation, imageUrl, title, artist, des
           description,
           artPos: position
         });
-        
       }}
     >
       {/* Frame border */}
