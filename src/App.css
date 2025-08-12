@@ -20,7 +20,7 @@
   height: 90%;
   border-radius: 10px;
   backdrop-filter: blur(10px);
-  background: rgba(255, 255, 255, 0.507);
+  /* background: rgba(255, 255, 255, 0.507); */
   color: black;
   padding: 20px;
   display: flex;
@@ -89,7 +89,7 @@ svg{
   
 }
 
-.close-btn{
+.close-overlay-btn{
   background: black;
   padding: 0rem;
   width: 35px;
@@ -97,6 +97,11 @@ svg{
   position: absolute;
   right: -10px;
   top: -10px;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .exhibition-btn {
   background: black;

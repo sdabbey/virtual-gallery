@@ -37,7 +37,7 @@ export default function OnScreenControls() {
         
         display: "grid",
         gridTemplateColumns: "50px 50px 50px",
-        gridTemplateRows: "50px 50px 20px",
+        gridTemplateRows: "50px 50px 0px",
         gap: "5px",
         zIndex: 1000
       }}

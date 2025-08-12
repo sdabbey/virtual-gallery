@@ -5,10 +5,12 @@ export default function MovementHint() {
       style={{
         position: "fixed",
         bottom: "20px",
-        right: "5%",
+        left: "50%",
+        transform: "translateX(-50%)",
+
         display: "flex",
         flexDirection: "column",
-        alignItems: "center",
+        
         justifyContent: "center",
         gap: ".5rem",
         background: "rgba(0,0,0,0.6)",
@@ -22,8 +24,10 @@ export default function MovementHint() {
         zIndex: 1000
       }}
     >
-      <div>Move: <strong>W A S D</strong> or <strong>↑ ↓ ← →</strong></div>
+      <div>Move: <strong>W A S D </strong> or <strong style={{fontSize: "1.6rem", fontWeight: "bolder"}}>↑ ↓ ← →</strong></div>
+      <div>Exit Artwork: <strong>ESC key</strong></div>
       <div>Drag mouse to look around</div>
+      
     </div>
   );
 }
