@@ -45,7 +45,7 @@ export default function Frame({ position, rotation, imageUrl, title, artist, des
       {/* Frame border */}
       <mesh>
         <boxGeometry args={[artWidth + 0.4, artHeight + 0.4, frameDepth]} />
-        <meshStandardMaterial color="#21130d" metalness={0.2} roughness={0.6} />
+        <meshStandardMaterial color="#fff" metalness={4} roughness={1} />
       </mesh>
 
       {/* Art itself */}

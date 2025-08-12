@@ -5,13 +5,17 @@ import * as THREE from "three";
 
 export default function GalleryRoom({ onFrameClick}) {
   const { camera } = useThree();
-  const wallTexture = useLoader(TextureLoader, "/textures/wall.jpg");
+  const wallTexture = useLoader(TextureLoader, "/textures/wall2.jpg");
   wallTexture.wrapS = wallTexture.wrapT = THREE.RepeatWrapping;
-  wallTexture.repeat.set(4, 4); // Adjust to taste
+  wallTexture.repeat.set(4, 1); // Adjust to taste
 
-  const floorTexture = useLoader(TextureLoader, "/textures/floor.jpg");
+  const floorTexture = useLoader(TextureLoader, "/textures/floor4.jpg");
   floorTexture.wrapS = floorTexture.wrapT = THREE.RepeatWrapping;
-  floorTexture.repeat.set(4, 4); // Adjust to taste
+  floorTexture.repeat.set(4, 3); // Adjust to taste
+
+  const ceilingTexture = useLoader(TextureLoader, "/textures/ceiling3.jpg");
+  ceilingTexture.wrapS = ceilingTexture.wrapT = THREE.RepeatWrapping;
+  ceilingTexture.repeat.set(4, 3); // Adjust to taste
 
   return (
     <group>
@@ -49,7 +53,7 @@ export default function GalleryRoom({ onFrameClick}) {
       {/* Ceiling */}
       <mesh position={[0, 10, 0]} rotation={[Math.PI / 2, 0, 0]}>
         <planeGeometry args={[40, 40]} />
-        <meshStandardMaterial color="#000" />
+        <meshStandardMaterial map={ceilingTexture} />
       </mesh>
 
 
