@@ -1,7 +1,7 @@
 // App.jsx
 import { useState, useEffect, useRef, Suspense } from "react";
 import { Canvas, useThree, useFrame } from "@react-three/fiber";
-import { OrbitControls } from "@react-three/drei";
+import { OrbitControls, useProgress, Loader } from "@react-three/drei";
 import GalleryRoom from "./components/GalleryRoom";
 import Overlay from "./components/Overlay";
 import * as THREE from "three";
@@ -24,7 +24,17 @@ import StartOverlay from "./components/StartOverlay";
 
 import CameraController from "./components/CameraController";
 
-
+function ProgressMonitor({ onDone }) {
+  const { active, loaded, total } = useProgress();
+  useEffect(() => {
+    // When active === false it means the loading manager finished
+    // guard with total > 0 so onDone only fires for real asset loads
+    if (!active && total > 0) {
+      onDone();
+    }
+  }, [active, loaded, total, onDone]);
+  return null; // no DOM here — just side effect
+}
 
 export default function App() {
   const [focus, setFocus] = useState(null); // { cameraPos, lookAt, title,... } while zoomed in
@@ -32,8 +42,11 @@ export default function App() {
   const [showDetailsBtn, setShowDetailsBtn] = useState(false);
   const [showOverlay, setShowOverlay] = useState(false);
   const [showStartOverlay, setShowStartOverlay] = useState(true);
-  const controlsRef = useRef();
   const [zoomedArtPos, setZoomedArtPos] = useState(null);
+  const [assetsLoaded, setAssetsLoaded] = useState(false);
+
+  const controlsRef = useRef();
+  
 
   const onFrameClick = (data) => {
      // store clicked art's position
@@ -87,6 +100,8 @@ export default function App() {
   return (
     <div className="w-screen h-screen">
       <Canvas camera={{ position: [0, 4, 20], fov: 60 }} shadows style={{ backgroundColor: "#222" }}>
+        {/* ProgressMonitor needs to be a Canvas child but OUTSIDE Suspense so it can see the loading state */}
+        <ProgressMonitor onDone={() => setAssetsLoaded(true)} />
         <Suspense fallback={null}>
           <CameraController
             mode={mode}
@@ -133,13 +148,16 @@ export default function App() {
 
         </Suspense>
       </Canvas>
+      {/* Show loading spinner while assets are loading */}
+      {!assetsLoaded && <Loader />}
+
       {/* Movement hint */}
       {/* <MovementHint/> */}
       {/* <div className="art-help">
         <svg fill="#ffffff" height="200px" width="200px" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 52 52" xml:space="preserve" stroke="#ffffff"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <path d="M26,0C11.663,0,0,11.663,0,26s11.663,26,26,26s26-11.663,26-26S40.337,0,26,0z M26,50C12.767,50,2,39.233,2,26 S12.767,2,26,2s24,10.767,24,24S39.233,50,26,50z"></path> <path d="M26,37c-0.553,0-1,0.447-1,1v2c0,0.553,0.447,1,1,1s1-0.447,1-1v-2C27,37.447,26.553,37,26,37z"></path> <path d="M26.113,9.001C26.075,9.001,26.037,9,25.998,9c-2.116,0-4.106,0.815-5.615,2.304C18.847,12.819,18,14.842,18,17 c0,0.553,0.447,1,1,1s1-0.447,1-1c0-1.618,0.635-3.136,1.787-4.272c1.153-1.137,2.688-1.765,4.299-1.727 c3.161,0.044,5.869,2.752,5.913,5.913c0.029,2.084-0.999,4.002-2.751,5.132C26.588,23.762,25,26.794,25,30.158V33 c0,0.553,0.447,1,1,1s1-0.447,1-1v-2.842c0-2.642,1.276-5.105,3.332-6.432c2.335-1.506,3.706-4.063,3.667-6.84 C33.939,12.599,30.401,9.061,26.113,9.001z"></path> </g> </g></svg>
       </div> */}
 
-      {mode !== "in" && !showStartOverlay && <OnScreenControls />}
+      {assetsLoaded && mode !== "in" && !showStartOverlay && <OnScreenControls />}
 
      
       {/* Show details button */}
@@ -161,7 +179,7 @@ export default function App() {
       )}
 
       {/* Start overlay */}
-      {!focus && showStartOverlay && (
+      {assetsLoaded && !focus && showStartOverlay && (
         <StartOverlay
           artist="The Art Agora"
           title="TAA Gallery"
